@@ -107,6 +107,8 @@ def main(problem, goal, method, n, n1=None, n2=None, m=None, k=None, B=None, reu
         if method == "Batch":
             logger.info(f"Batch size: {n//m}")
         result = computeOptVal(gapProblem, gapEstimator, objFunc, solFunc, sampleFunc, alpha, n, numTrial, m=m, k=k, B=B, rng=data_rng)
+        optVal = objFunc(solFunc())
+        result[1] = optVal - result[1]
     elif goal == "GapBC":
         assert n1 is not None
         assert n2 is not None
