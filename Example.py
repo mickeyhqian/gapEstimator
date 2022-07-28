@@ -44,8 +44,6 @@ def cvarSol():
     return norm.ppf(0.9)
 
 
-
-
 # Portfolio problem
 rng = np.random.default_rng(seed=1235)
 portSigmaRoot = rng.uniform(size=(5, 5))

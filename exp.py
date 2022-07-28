@@ -6,10 +6,7 @@ Created on Mon Jul 18 21:54:31 2022
 @author: mickey
 """
 
-import gurobipy as gp
 import numpy as np
-from scipy.stats import norm
-from scipy.integrate import quad
 from Example import cvarSAA, cvarObj, cvarSAAObj, cvarSample, cvarSol, portfolioSAA, portfolioObj, portfolioSAAObj, portfolioSample, portfolioSol, intSAA, intObj, intSAAObj, intSample, intSol, linearSAA, linearObj, linearSAAObj, linearSample, linearSol
 from GapEstimator import BagProcedure, BatchProcedure, SRPProcedure, I2RPProcedure, A2RPProcedure, GapProblem
 from ExpProcedure import computeOptVal, computeGapBC, computeGapCRN
@@ -203,7 +200,7 @@ if __name__ == "__main__":
             for k in sortedK:
                 main(sys.argv[1], goal, method, n, n1=n1, n2=n2, m=m, k=k, B=B)
         else:
-            sys.exit(f"Invalid method")
+            sys.exit("Invalid method")
 
 
 
