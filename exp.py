@@ -19,7 +19,7 @@ import logging
 logger = logging.getLogger("gapEstimator")
 
 def main(problem, goal, method, n, n1=None, n2=None, m=None, k=None, B=None, reuseLog=False):
-    directory = "/Users/mickey/Documents/ResearchProject/OptimalityGap/"
+    directory = "/Users/mickey/Documents/ResearchProject/OptimalityGap/ExpResult2/"
     file_name = [problem, goal, method, str(n), str(n1), str(n2), str(m), str(k), str(B)]
     file_name = "_".join(file_name)
     file_path = directory + file_name
@@ -107,8 +107,6 @@ def main(problem, goal, method, n, n1=None, n2=None, m=None, k=None, B=None, reu
         if method == "Batch":
             logger.info(f"Batch size: {n//m}")
         result = computeOptVal(gapProblem, gapEstimator, objFunc, solFunc, sampleFunc, alpha, n, numTrial, m=m, k=k, B=B, rng=data_rng)
-        optVal = objFunc(solFunc())
-        result[1] = optVal - result[1]
     elif goal == "GapBC":
         assert n1 is not None
         assert n2 is not None
@@ -128,7 +126,11 @@ def main(problem, goal, method, n, n1=None, n2=None, m=None, k=None, B=None, reu
         return
     
     logger.info(f"mean coverage: {result[0]}")
-    logger.info(f"mean bound: {result[1]}")
+    if goal == "OptVal":
+        optVal = objFunc(solFunc())
+        logger.info(f"mean bound: {optVal - result[1]}")
+    else:
+        logger.info(f"mean bound: {result[1]}")
     logger.info(f"std bound: {result[2]}")
     logger.info("Experiment finishes ==========================\n\n\n")
     logger.removeHandler(handler)
@@ -142,7 +144,11 @@ if __name__ == "__main__":
     m = None
     k = None
     B = None
-    
+    goal = sys.argv[2]
+    method = sys.argv[3]
+    n = int(sys.argv[4])
+
+
     numArg = len(sys.argv)
     idx = 5
     while idx < numArg:
@@ -160,8 +166,44 @@ if __name__ == "__main__":
         else:
             sys.exit(f"Invalid inputs at position {idx}")
         idx += 1
-    for k in np.arange(2, 31, 4):
-        main(sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), n1=n1, n2=n2, m=m, k=k, B=B)
+
+    if method in ["SRP", "I2RP", "A2RP"]:
+        main(sys.argv[1], goal, method, n, n1=n1, n2=n2, m=m, k=k, B=B)
+    else:
+        # find ranges for m
+        if goal == "GapCRN":
+            totalN = n2
+        else:
+            totalN = n
+        
+        minM = 2
+        maxM = totalN // 2
+        k2m = {}
+        for i in range(minM, maxM+1):
+            newK = totalN // i
+            if newK not in k2m:
+                k2m[newK] = i
+            k2m[newK] = max(k2m[newK], i)
+        
+        if method == "Batch":
+            sortedM = sorted(list(k2m.values()))
+            for m in sortedM:
+                main(sys.argv[1], goal, method, n, n1=n1, n2=n2, m=m, k=k, B=B)
+        elif method in ["BagU", "BagV"]:
+            sortedK = sorted(list(k2m))
+            maxK = 2
+            if len(sortedK) > 0:
+                maxK = max(maxK, sortedK[-1])
+            upperK = int(totalN * 0.9)
+            if maxK < upperK:
+                newK = np.linspace(maxK, upperK, num=5).astype(int)[1:]
+                newK = sorted(list(set(newK)))
+                sortedK.extend(newK)
+
+            for k in sortedK:
+                main(sys.argv[1], goal, method, n, n1=n1, n2=n2, m=m, k=k, B=B)
+        else:
+            sys.exit(f"Invalid method")
 
 
 
