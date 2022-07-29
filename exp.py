@@ -173,6 +173,7 @@ if __name__ == "__main__":
         else:
             totalN = n
         
+        
         minM = 2
         maxM = totalN // 2
         k2m = {}
@@ -181,6 +182,28 @@ if __name__ == "__main__":
             if newK not in k2m:
                 k2m[newK] = i
             k2m[newK] = max(k2m[newK], i)
+
+        kList = sorted(list(k2m))
+        interval = 1
+        kSelected = kList
+        while len(kSelected) > 10:
+            interval += 1
+            kSelected = [kList[-1], kList[0]]
+            for i in range(1, len(kList)-1):
+                if kList[i] >= kSelected[-1] + interval:
+                    kSelected.append(kList[i])
+        kSelected.sort()
+        k2m = {key:k2m[key] for key in kSelected}
+        
+        
+        # minM = 2
+        # maxM = totalN // 2
+        # k2m = {}
+        # for i in range(minM, maxM+1):
+        #     newK = totalN // i
+        #     if newK not in k2m:
+        #         k2m[newK] = i
+        #     k2m[newK] = max(k2m[newK], i)
         
         if method == "Batch":
             sortedM = sorted(list(k2m.values()))
