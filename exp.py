@@ -7,7 +7,7 @@ Created on Mon Jul 18 21:54:31 2022
 """
 
 import numpy as np
-from Example import cvarSAA, cvarObj, cvarSAAObj, cvarSample, cvarSol, portfolioSAA, portfolioObj, portfolioSAAObj, portfolioSample, portfolioSol, intSAA, intObj, intSAAObj, intSample, intSol, linearSAA, linearObj, linearSAAObj, linearSample, linearSol
+from Example import cvarSAA, cvarObj, cvarSAAObj, cvarSample, cvarSol, portfolioSAA, portfolioObj, portfolioSAAObj, portfolioSample, portfolioSol, intSAA, intObj, intSAAObj, intSample, intSol, linearSAA, linearObj, linearSAAObj, linearSample, linearSol, logitSAA, logitSAAObj, logitObj, logitSample, logitSol
 from GapEstimator import BagProcedure, BatchProcedure, SRPProcedure, I2RPProcedure, A2RPProcedure, GapProblem
 from ExpProcedure import computeOptVal, computeGapBC, computeGapCRN
 import sys
@@ -16,7 +16,7 @@ import logging
 logger = logging.getLogger("gapEstimator")
 
 def main(problem, goal, method, n, n1=None, n2=None, m=None, k=None, B=None, reuseLog=False):
-    directory = "/Users/mickey/Documents/ResearchProject/OptimalityGap/ExpResult2/"
+    directory = "/Users/mickey/Documents/ResearchProject/OptimalityGap/logistic/"
     file_name = [problem, goal, method, str(n), str(n1), str(n2), str(m), str(k), str(B)]
     file_name = "_".join(file_name)
     file_path = directory + file_name
@@ -66,6 +66,11 @@ def main(problem, goal, method, n, n1=None, n2=None, m=None, k=None, B=None, reu
         objFunc = linearObj
         solFunc = linearSol
         sampleFunc = linearSample
+    elif problem == "logistic":
+        gapProblem = GapProblem(logitSAA, logitSAAObj)
+        objFunc = logitObj
+        solFunc = logitSol
+        sampleFunc = logitSample
     else:
         logger.info("Invalid problem")
         return
@@ -219,7 +224,7 @@ if __name__ == "__main__":
                 newK = np.linspace(maxK, upperK, num=5).astype(int)[1:]
                 newK = sorted(list(set(newK)))
                 sortedK.extend(newK)
-
+            # sortedK = [int(0.7 * totalN)]
             for k in sortedK:
                 main(sys.argv[1], goal, method, n, n1=n1, n2=n2, m=m, k=k, B=B)
         else:
