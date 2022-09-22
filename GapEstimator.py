@@ -52,8 +52,11 @@ class BagProcedure:
             
         if self._pointVar:
             sigma2 += Zvar / B
-            
-        return Zmean - cv * np.sqrt(sigma2), Zmean, sigma2
+        
+        if x0 is None:
+            return Zmean - cv * np.sqrt(sigma2), Zmean, sigma2
+        else:
+            return -(Zmean - cv * np.sqrt(sigma2)), -Zmean, sigma2
     
     
 class BatchProcedure:
@@ -73,10 +76,13 @@ class BatchProcedure:
             Zval[b] = obj
         
         Zmean = np.mean(Zval)
-        Zvar = np.var(Zval)
+        Zvar = np.var(Zval, ddof=1)
         sigma2 = Zvar / m
             
-        return Zmean - cv * np.sqrt(sigma2), Zmean, sigma2
+        if x0 is None:
+            return Zmean - cv * np.sqrt(sigma2), Zmean, sigma2
+        else:
+            return -(Zmean - cv * np.sqrt(sigma2)), -Zmean, sigma2
     
     
 class SRPProcedure:        
@@ -90,8 +96,11 @@ class SRPProcedure:
         _, obj, var = GapProblem.computeSAA(data, x0=x0)
 
         sigma2 = var / n
-            
-        return obj - cv * np.sqrt(sigma2), obj, sigma2
+        
+        if x0 is None:
+            return obj - cv * np.sqrt(sigma2), obj, sigma2
+        else:
+            return -(obj - cv * np.sqrt(sigma2)), -obj, sigma2
     
     
 class I2RPProcedure:        
@@ -107,8 +116,11 @@ class I2RPProcedure:
         _, _, var = GapProblem.computeSAA(data[n1:], x0=x0)
 
         sigma2 = var / n1
-            
-        return obj - cv * np.sqrt(sigma2), obj, sigma2
+        
+        if x0 is None:
+            return obj - cv * np.sqrt(sigma2), obj, sigma2
+        else:
+            return -(obj - cv * np.sqrt(sigma2)), -obj, sigma2
     
     
 class A2RPProcedure:        
@@ -127,7 +139,10 @@ class A2RPProcedure:
         var = (var1 + var2) / 2
         sigma2 = var / n
             
-        return obj - cv * np.sqrt(sigma2), obj, sigma2
+        if x0 is None:
+            return obj - cv * np.sqrt(sigma2), obj, sigma2
+        else:
+            return -(obj - cv * np.sqrt(sigma2)), -obj, sigma2
             
     
 class GapProblem:

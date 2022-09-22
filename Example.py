@@ -18,7 +18,7 @@ from scipy.linalg import sqrtm
 cvarAlpha = 0.1
 def cvarSAA(data, x0=None):
     n = len(data)
-    data = sorted(data)
+    data = np.sort(data)
     idx = int(np.ceil(cvarAlpha * n))
     x = data[-idx]
     mean, var = cvarSAAObj(data, x, x0=x0)
@@ -39,7 +39,7 @@ def cvarSample(n, rng):
     return rng.normal(size=n)
 
 def cvarSol():
-    return norm.ppf(0.9)
+    return norm.ppf(1 - cvarAlpha)
 
 
 # Portfolio problem
@@ -69,7 +69,7 @@ def portfolioSAAObj(data, x, x0=None):
     cval = x[5]
     SAA_cost = cval + np.maximum(-data.dot(xval) - cval, 0) / portAlpha
     if x0 is not None:
-        SAA_cost -= x0[5] + np.maximum(-data.dot(x0[:5]) - x[5], 0) / portAlpha
+        SAA_cost -= x0[5] + np.maximum(-data.dot(x0[:5]) - x0[5], 0) / portAlpha
     return np.mean(SAA_cost), np.var(SAA_cost)
 
 def portfolioObj(x):
@@ -273,8 +273,35 @@ def logitSol():
     
     
     
+
+simplexMu = np.zeros(10)
+simplexMu[5:] = 0.1
+# simple linear problem
+def simplexSAA(data, x0=None):
+    mu = np.mean(data, axis=0)
+    idx = np.argmin(mu)
+    x = np.zeros(10)
+    x[idx] = 1
+    mean, var = simplexSAAObj(data, x, x0=x0)
+    return x, mean, var # SAA solution, SAA objective value, SAA objective variance
+
+def simplexSAAObj(data, x, x0=None):
+    SAA_cost = data.dot(x)
+    if x0 is not None:
+        SAA_cost -= data.dot(x0)
+    return np.mean(SAA_cost), np.var(SAA_cost)
     
-    
+def simplexObj(x):
+    return simplexMu.dot(x)
+
+def simplexSample(n, rng):
+    return rng.multivariate_normal(simplexMu, np.eye(10), size=n)
+
+def simplexSol():
+    idx = np.argmin(simplexMu)
+    sol = np.zeros(10)
+    sol[idx] = 1
+    return sol
     
     
     

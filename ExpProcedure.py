@@ -9,8 +9,8 @@ Created on Sat Jul 23 18:29:36 2022
 import numpy as np
 from scipy.stats import norm
 from GapEstimator import BagProcedure, BatchProcedure
-import logging
-logger = logging.getLogger("gapEstimator")
+# import logging
+# logger = logging.getLogger("gapEstimator")
 
 
 def computeOptVal(gapProblem, gapEstimator, computeObjVal, getOptSol, getSample, alpha, n, numTrial, m=None, k=None, B=None, rng=None):
@@ -19,6 +19,8 @@ def computeOptVal(gapProblem, gapEstimator, computeObjVal, getOptSol, getSample,
     trueSol = getOptSol()
     trueObj = computeObjVal(trueSol)
     bound = np.zeros(numTrial)
+    pointEst = np.zeros(numTrial)
+    errorVar = np.zeros(numTrial)
     for i in range(numTrial):
         # generate sample
         data = getSample(n, rng)
@@ -27,18 +29,20 @@ def computeOptVal(gapProblem, gapEstimator, computeObjVal, getOptSol, getSample,
         if isinstance(gapEstimator, BagProcedure):
             assert k is not None
             assert B is not None
-            newBound, _, _ = gapEstimator.run(gapProblem, data, alpha, k, B)
+            newBound, newPointEst, newErrorVar = gapEstimator.run(gapProblem, data, alpha, k, B)
         elif isinstance(gapEstimator, BatchProcedure):
             assert m is not None
-            newBound, _, _ = gapEstimator.run(gapProblem, data, alpha, m)
+            newBound, newPointEst, newErrorVar = gapEstimator.run(gapProblem, data, alpha, m)
         else:
-            newBound, _, _ = gapEstimator.run(gapProblem, data, alpha)
+            newBound, newPointEst, newErrorVar = gapEstimator.run(gapProblem, data, alpha)
             
         bound[i] = newBound
-        if (i+1) % 50 == 0:
-            logger.info(f"{type(gapEstimator).__name__}: Finish trial # {i+1}")
+        pointEst[i] = newPointEst
+        errorVar[i] = newErrorVar
+        # if (i+1) % 50 == 0:
+        #     logger.info(f"{type(gapEstimator).__name__}: Finish trial # {i+1}")
         
-    return np.mean(bound <= trueObj), np.mean(bound), np.var(bound)
+    return np.mean(bound <= trueObj), np.mean(bound), np.var(bound), np.mean(pointEst), np.var(pointEst), np.mean(newErrorVar)
 
 
 def computeGapBC(gapProblem, gapEstimator, computeObjVal, getOptSol, getSample, alpha, n1, n2, numTrial, m=None, k=None, B=None, rng=None):
@@ -47,6 +51,8 @@ def computeGapBC(gapProblem, gapEstimator, computeObjVal, getOptSol, getSample, 
     trueSol = getOptSol()
     trueObj = computeObjVal(trueSol)
     bound = np.zeros(numTrial)
+    pointEst = np.zeros(numTrial)
+    errorVar = np.zeros(numTrial)
     gap = np.zeros(numTrial)
     n = n1 + n2
     for i in range(numTrial):
@@ -61,18 +67,20 @@ def computeGapBC(gapProblem, gapEstimator, computeObjVal, getOptSol, getSample, 
         if isinstance(gapEstimator, BagProcedure):
             assert k is not None
             assert B is not None
-            lower, _, _ = gapEstimator.run(gapProblem, data, alpha/2, k, B)
+            lower, newPointEst, newErrorVar = gapEstimator.run(gapProblem, data, alpha/2, k, B)
         elif isinstance(gapEstimator, BatchProcedure):
             assert m is not None
-            lower, _, _ = gapEstimator.run(gapProblem, data, alpha/2, m)
+            lower, newPointEst, newErrorVar = gapEstimator.run(gapProblem, data, alpha/2, m)
         else:
-            lower, _, _ = gapEstimator.run(gapProblem, data, alpha/2)
+            lower, newPointEst, newErrorVar = gapEstimator.run(gapProblem, data, alpha/2)
             
         bound[i] = max(upper - lower, 0)
-        if (i+1) % 50 == 0:
-            logger.info(f"{type(gapEstimator).__name__}: Finish trial # {i+1}")
+        pointEst[i] = newPointEst
+        errorVar[i] = newErrorVar
+        # if (i+1) % 50 == 0:
+        #     logger.info(f"{type(gapEstimator).__name__}: Finish trial # {i+1}")
         
-    return np.mean(bound >= gap), np.mean(bound), np.var(bound)
+    return np.mean(bound >= gap), np.mean(bound), np.var(bound), np.mean(pointEst), np.var(pointEst), np.mean(newErrorVar)
 
 
 def computeGapCRN(gapProblem, gapEstimator, computeObjVal, getOptSol, getSample, alpha, n1, n2, numTrial, m=None, k=None, B=None, rng=None):
@@ -81,6 +89,8 @@ def computeGapCRN(gapProblem, gapEstimator, computeObjVal, getOptSol, getSample,
     trueSol = getOptSol()
     trueObj = computeObjVal(trueSol)
     bound = np.zeros(numTrial)
+    pointEst = np.zeros(numTrial)
+    errorVar = np.zeros(numTrial)
     gap = np.zeros(numTrial)
     n = n1 + n2
     for i in range(numTrial):
@@ -92,15 +102,17 @@ def computeGapCRN(gapProblem, gapEstimator, computeObjVal, getOptSol, getSample,
         if isinstance(gapEstimator, BagProcedure):
             assert k is not None
             assert B is not None
-            lower, _, _ = gapEstimator.run(gapProblem, data[n1:], alpha, k, B, x0=x0)
+            lower, newPointEst, newErrorVar = gapEstimator.run(gapProblem, data[n1:], alpha, k, B, x0=x0)
         elif isinstance(gapEstimator, BatchProcedure):
             assert m is not None
-            lower, _, _ = gapEstimator.run(gapProblem, data[n1:], alpha, m, x0=x0)
+            lower, newPointEst, newErrorVar = gapEstimator.run(gapProblem, data[n1:], alpha, m, x0=x0)
         else:
-            lower, _, _ = gapEstimator.run(gapProblem, data[n1:], alpha, x0=x0)
+            lower, newPointEst, newErrorVar = gapEstimator.run(gapProblem, data[n1:], alpha, x0=x0)
             
-        bound[i] = max(-lower, 0)
-        if (i+1) % 50 == 0:
-            logger.info(f"{type(gapEstimator).__name__}: Finish trial # {i+1}")
+        bound[i] = max(lower, 0)
+        pointEst[i] = newPointEst
+        errorVar[i] = newErrorVar
+        # if (i+1) % 50 == 0:
+        #     logger.info(f"{type(gapEstimator).__name__}: Finish trial # {i+1}")
         
-    return np.mean(bound >= gap), np.mean(bound), np.var(bound)
+    return np.mean(bound >= gap), np.mean(bound), np.var(bound), np.mean(pointEst), np.var(pointEst), np.mean(newErrorVar)
